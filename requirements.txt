@@ -14,7 +14,7 @@ djangorestframework==3.8.0
 et-xmlfile==1.0.1
 future==0.18.2
 get==2019.4.13
-httplib2==0.17.3
+httplib2==0.18.0
 idna==2.9
 importlib-metadata==1.6.0
 jdcal==1.4.1
