@@ -25,9 +25,9 @@ sys.path.insert(0,os.path.join(BASE_DIR,'extra_app'))
 SECRET_KEY = 'he*hdnv8z)xf5l%s_qo)eit+@si147(7omt!60g986%rtq2ts)'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['118.24.255.219']
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -84,9 +84,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'readbook',
-        'USER': 'readbook',
-        'PASSWORD': 'ljh1314',
-        'HOST': '118.24.255.219',
+        'USER': 'root',
+        # 'PASSWORD': 'ljh1314',
+        'PASSWORD': '12345678',
+        'HOST': '127.0.0.1',
         'PORT': 3306,
         'CHARSET': 'utf8',
     }

@@ -22,7 +22,9 @@ import xadmin
 router = DefaultRouter()
 router.register(r'book',userview.BookViewSet,base_name='book')
 router.register(r'category',userview.CategoryViewSet,base_name='category')
+router.register(r'rcategory',userview.RecomendCategoryViewSet,base_name='rcategory')
 router.register(r'banner',userview.BannderViewSet,base_name='banner')
+router.register(r'adbanner',userview.AdvertiseBannderViewSet,base_name='adbanner')
 router.register(r'chpater',userview.ChpaterViewSet,base_name='chpater')
 router.register(r'bookstore',userview.BookStoreViewSet,base_name='bookstore')
 

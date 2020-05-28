@@ -1,7 +1,8 @@
 import xadmin
 from xadmin import views
 
-from user.models import UserInfo,Category,Book,Chpater,RecommendCetagory,Brand,BookStore
+from user.models import UserInfo,Category,Book,\
+    Chpater,RecommendCetagory,Brand,BookStore,AdvertiseBrand
 
 class BaseSetting(object):
     enable_themes = True
@@ -37,6 +38,10 @@ class RecommendCetagoryAdmin(object):
 class BookStoreAdmin(object):
     list_display = ['book','user','addTime']
 
+class AdvertiseBrandAdmin(object):
+    list_display = ['title', 'index', 'info', 'addTime','coverImage','url']
+
+
 
 
 xadmin.site.register(views.BaseAdminView, BaseSetting)
@@ -47,6 +52,7 @@ xadmin.site.register(Category,BookCategoryAdmin)
 xadmin.site.register(Book,BookInfoAdmin)
 xadmin.site.register(Chpater,ChpterInfoAdmin)
 xadmin.site.register(Brand,BrandAdmin)
+xadmin.site.register(AdvertiseBrand,AdvertiseBrandAdmin)
 xadmin.site.register(RecommendCetagory,RecommendCetagoryAdmin)
 xadmin.site.register(BookStore,BookStoreAdmin)
 

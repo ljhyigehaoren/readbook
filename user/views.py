@@ -66,15 +66,15 @@ class LoginView(APIView):
             'status':200,
             'msg':None
         }
-        print(request.version)
         try:
+            print(request.data)
             obj = models.UserInfo.objects.filter(
                 account=request.data['account'],
                 password=request.data['password']
             ).first()
-
+            print(obj)
             if not obj:
-                ret['code'] = 202
+                ret['status'] = 202
                 ret['msg'] = '用户名或密码错误'
             else:
                 #创建唯一的token (md5)
@@ -95,8 +95,8 @@ class LoginView(APIView):
 
         except Exception as err:
             print(err)
-            ret['code'] = 202
-            ret['msg'] = 'faild'
+            ret['status'] = 202
+            ret['msg'] = '请求异常'
 
         return Response(ret)
 
@@ -118,9 +118,51 @@ class BannderViewSet(mixins.ListModelMixin,GenericViewSet):
 
         return Response(result)
 
+class AdvertiseBannderViewSet(mixins.ListModelMixin,GenericViewSet):
+    queryset = models.AdvertiseBrand.objects.all().order_by('index')
+    serializer_class = serializers.AdvertiseBranderSerializers
+
+    def list(self, request, *args, **kwargs):
+        result = {
+            'status': 200,
+        }
+        try:
+            queryset = self.filter_queryset(self.get_queryset())
+            serializer = self.get_serializer(queryset, many=True)
+            result['data'] = serializer.data
+
+        except Exception as err:
+            result['msg'] = '请求异常'
+
+        return Response(result)
+
 class CategoryViewSet(mixins.ListModelMixin,GenericViewSet):
     queryset = models.Category.objects.all()
     serializer_class = serializers.CategorySerializers
+    pagination_class = pagination.MyPageNumberPagination
+
+    def list(self, request, *args, **kwargs):
+        result = {
+            'status': 200,
+        }
+        try:
+            queryset = self.filter_queryset(self.get_queryset())
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+
+            serializer = self.get_serializer(queryset, many=True)
+            result['data'] = serializer.data
+
+        except Exception as err:
+            result['msg'] = '请求异常'
+
+        return Response(result)
+
+class RecomendCategoryViewSet(mixins.ListModelMixin,GenericViewSet):
+    queryset = models.RecommendCetagory.objects.all().order_by('index')
+    serializer_class = serializers.RecomendCategorySerializers
     pagination_class = pagination.MyPageNumberPagination
 
     def list(self, request, *args, **kwargs):

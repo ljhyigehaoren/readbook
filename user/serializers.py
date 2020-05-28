@@ -28,6 +28,17 @@ class CategorySerializers(serializers.ModelSerializer):
         model = models.Category
         fields = "__all__"
 
+class RecomendCategorySerializers(serializers.ModelSerializer):
+    id = serializers. IntegerField(source='category.id')
+    name = serializers.CharField(source='category.name')
+    info = serializers.CharField(source='category.info')
+    coverImage = serializers.CharField(source='category.coverImage')
+
+    class Meta:
+        model = models.RecommendCetagory
+        fields = ['id','name','info','coverImage']
+
+
 class BookListSerializers(serializers.ModelSerializer):
     category = CategorySerializers()
     isAdd = serializers.SerializerMethodField()
@@ -52,6 +63,12 @@ class BannderSerializers(serializers.ModelSerializer):
         model = models.Brand
         fields = "__all__"
 
+
+class AdvertiseBranderSerializers(serializers.ModelSerializer):
+    addTime = serializers.DateTimeField(format='%Y-%m-%d %H:%M')
+    class Meta:
+        model = models.AdvertiseBrand
+        fields = "__all__"
 
 class ChpaterListSerializers(serializers.ModelSerializer):
     class Meta:

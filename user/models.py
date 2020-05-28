@@ -43,7 +43,10 @@ class Token(models.Model):
 class Category(models.Model):
     name = models.CharField(max_length=128,null=False,blank=False,verbose_name='分类名称')
     info = models.CharField(max_length=256, null=True, blank=True, verbose_name='分类描述')
-    coverImage = models.CharField(max_length=256, null=True, blank=True, verbose_name='分类封面图')
+    coverImage = models.CharField(max_length=256, null=True,
+                                  blank=True,
+                                  verbose_name='分类封面图'
+                                  )
     class Meta:
         verbose_name = '小说分类'
         verbose_name_plural = verbose_name
@@ -103,6 +106,21 @@ class Brand(models.Model):
 
     def __str__(self):
         return self.book.title
+
+class AdvertiseBrand(models.Model):
+    title = models.CharField(max_length=56)
+    index = models.IntegerField()
+    info = models.CharField(max_length=256)
+    coverImage = models.CharField(max_length=256,null=False,blank=True)
+    url = models.CharField(max_length=256,null=False,blank=True)
+    addTime = models.DateTimeField(default=datetime.now, verbose_name='添加时间')
+
+    class Meta:
+        verbose_name = '广告轮播图'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.title
 
 class RecommendCetagory(models.Model):
     category = models.ForeignKey(Category)
