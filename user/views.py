@@ -1,9 +1,4 @@
-from django.shortcuts import render
 from django.http.response import JsonResponse,HttpResponse
-import json
-# Create your views here.
-
-
 from rest_framework import mixins
 from rest_framework.viewsets import GenericViewSet
 from user import serializers
@@ -11,9 +6,10 @@ from user import models
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
-from utils import pagination
-from django.forms.models import model_to_dict
+from utils import pagination,authentication,permissions
+import json
 
+from django.forms.models import model_to_dict
 
 
 def login_test(request):
@@ -74,7 +70,7 @@ class LoginView(APIView):
             ).first()
             print(obj)
             if not obj:
-                ret['status'] = 202
+                ret['status'] = 2001
                 ret['msg'] = '用户名或密码错误'
             else:
                 #创建唯一的token (md5)
@@ -88,14 +84,14 @@ class LoginView(APIView):
                 )
                 ser = serializers.UserInfoSerializers(instance=obj, many=False)
                 data = ser.data
-                ret['msg'] = 'successed'
+                ret['msg'] = '用户登录成功'
                 data['uid'] = token
                 ret['data'] = data
                 print(ret)
 
         except Exception as err:
             print(err)
-            ret['status'] = 202
+            ret['status'] = 2001
             ret['msg'] = '请求异常'
 
         return Response(ret)
@@ -107,6 +103,7 @@ class BannderViewSet(mixins.ListModelMixin,GenericViewSet):
     def list(self, request, *args, **kwargs):
         result = {
             'status': 200,
+            'msg':'请求成功'
         }
         try:
             queryset = self.filter_queryset(self.get_queryset())
@@ -114,6 +111,7 @@ class BannderViewSet(mixins.ListModelMixin,GenericViewSet):
             result['data'] = serializer.data
 
         except Exception as err:
+            result["status"] = 2001
             result['msg'] = '请求异常'
 
         return Response(result)
@@ -125,6 +123,7 @@ class AdvertiseBannderViewSet(mixins.ListModelMixin,GenericViewSet):
     def list(self, request, *args, **kwargs):
         result = {
             'status': 200,
+            'msg': '请求成功'
         }
         try:
             queryset = self.filter_queryset(self.get_queryset())
@@ -144,6 +143,7 @@ class CategoryViewSet(mixins.ListModelMixin,GenericViewSet):
     def list(self, request, *args, **kwargs):
         result = {
             'status': 200,
+            'msg': '请求成功'
         }
         try:
             queryset = self.filter_queryset(self.get_queryset())
@@ -156,6 +156,7 @@ class CategoryViewSet(mixins.ListModelMixin,GenericViewSet):
             result['data'] = serializer.data
 
         except Exception as err:
+            result["status"] = 2001
             result['msg'] = '请求异常'
 
         return Response(result)
@@ -168,6 +169,7 @@ class RecomendCategoryViewSet(mixins.ListModelMixin,GenericViewSet):
     def list(self, request, *args, **kwargs):
         result = {
             'status': 200,
+            'msg': '请求成功'
         }
         try:
             queryset = self.filter_queryset(self.get_queryset())
@@ -185,14 +187,23 @@ class RecomendCategoryViewSet(mixins.ListModelMixin,GenericViewSet):
         return Response(result)
 
 
-class BookViewSet(mixins.ListModelMixin,GenericViewSet):
+class BookViewSet(mixins.ListModelMixin,mixins.RetrieveModelMixin,GenericViewSet):
     queryset = models.Book.objects.all()
-    serializer_class = serializers.BookListSerializers
+    # serializer_class = serializers.BookListSerializers #默认的序列化类
     pagination_class = pagination.MyPageNumberPagination
+    result = {"status":200,"msg":"请求成功"}
 
+    def get_serializer_class(self):
+        """
+        动态获取序列化类
+        :return:
+        """
+        if self.action == "retrieve":
+            return serializers.BookDetailSerializers
+        return serializers.BookListSerializers
 
     def list(self, request, *args, **kwargs):
-        pid = request.query_params.get('pid')
+        pid = request.query_params.get('categoryId')
 
         if pid and not pid == '(null)':
             queryset = models.Book.objects.filter(category=pid)
@@ -207,6 +218,12 @@ class BookViewSet(mixins.ListModelMixin,GenericViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+    def retrieve(self, request, *args, **kwargs):
+        response = super(BookViewSet,self).retrieve(request, *args, **kwargs)
+        self.result["data"] = response.data
+        response.data = self.result
+        response.status_code = status.HTTP_200_OK
+        return response
 
 class ChpaterViewSet(mixins.ListModelMixin,
                      mixins.RetrieveModelMixin,
@@ -225,9 +242,21 @@ class ChpaterViewSet(mixins.ListModelMixin,
             return models.Chpater.objects.filter(book=bookId)
         return self.queryset
 
+    def retrieve(self, request, *args, **kwargs):
+        response = super(ChpaterViewSet,self).retrieve(request, *args, **kwargs)
+        dict = {"status":200,"msg":"请求成功"}
+        dict["data"] = response.data
+        response.data = dict
+        response.status_code = status.HTTP_200_OK
+        return response
+
+
+
 class BookStoreViewSet(mixins.CreateModelMixin,mixins.ListModelMixin,
                        mixins.DestroyModelMixin,GenericViewSet):
-    queryset = models.BookStore.objects.all()
+    queryset = models.BookStore.objects.get_queryset()
+    authentication_classes = [authentication.MyAuthentication,]
+    permission_classes = [permissions.IsOwnerOrReadOnly,]
     pagination_class = pagination.MyPageNumberPagination
     serializer_class = serializers.BookStoreSerializers
 
@@ -237,43 +266,52 @@ class BookStoreViewSet(mixins.CreateModelMixin,mixins.ListModelMixin,
         return serializers.BookStoreSerializers
 
     def list(self, request, *args, **kwargs):
-        account = request.query_params.get('account')
-        user = models.UserInfo.objects.filter(account=account).first()
-        queryset = models.BookStore.objects.filter(user=user)
+        # account = request.user.account
+        # # account = request.query_params.get('account')
+        # user = models.UserInfo.objects.filter(account=account).first()
+        # queryset = models.BookStore.objects.filter(user=user)
 
-        page = self.paginate_queryset(queryset)
+        page = self.paginate_queryset(self.queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        serializer = self.get_serializer(queryset, many=True)
+        serializer = self.get_serializer(self.queryset, many=True)
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
-        id = kwargs.get('pk')
-        book = models.Book.objects.filter(id=id)
+        id = kwargs.get('pk') #获取书籍id
+        book = models.Book.objects.filter(id=id) #根据书籍id，查找对应书籍
         result = {
             'status':200,
             'msg':'删除成功',
         }
         if book:
-            instance = models.BookStore.objects.filter(book=book)
-            self.perform_destroy(instance)
-            return Response(result,status=status.HTTP_204_NO_CONTENT)
+            # instance = models.BookStore.objects.filter(book=book,user=request.user).first()
+            instance = self.queryset.filter(book=book).first()
+            if instance:
+                self.perform_destroy(instance)
+                return Response(result,status=status.HTTP_200_OK)
+            else:
+                result['status'] = 2001
+                result['msg'] = '删除失败,用户没有添加该书籍'
         else:
-            result['status'] = 201
-            result['msg'] = '删除失败'
+            result['status'] = 2001
+            result['msg'] = '删除失败,没有该书籍'
         return Response(result,status=status.HTTP_200_OK)
 
+    def get_queryset(self):
+        return models.BookStore.objects.all(user=self.request.user)
+
     def create(self, request, *args, **kwargs):
-        user = models.UserInfo.objects.filter(account=request.data['user']).first()
+        account = request.user.account
+        user = models.UserInfo.objects.filter(account=account).first()
         result = {
             'status': 200,
             'msg': '添加成功',
         }
         try:
             if user:
-                print(request.data)
                 data = {}
                 data['user'] = user.id
                 data['book'] = request.data['book']
@@ -282,30 +320,30 @@ class BookStoreViewSet(mixins.CreateModelMixin,mixins.ListModelMixin,
                 serializer.is_valid(raise_exception=True)
                 self.perform_create(serializer)
                 headers = self.get_success_headers(serializer.data)
-
                 result['data'] = serializer.data
-                print(result)
                 return Response(result, status=status.HTTP_201_CREATED, headers=headers)
             else:
-                result['status'] = 201
+                result['status'] = 2001
                 result['msg'] = '添加失败'
                 return Response(result, status=status.HTTP_200_OK)
         except Exception as err:
-            result['status'] = 201
+            result['status'] = 2001
             result['msg'] = '添加失败'
             return Response(result, status=status.HTTP_200_OK)
 
 class UserProfileViewSet(mixins.RetrieveModelMixin,GenericViewSet):
 
     queryset = models.UserInfo.objects.all()
+    authentication_classes = [authentication.MyAuthentication, ]
     serializer_class = serializers.UserInfoSerializers
 
     def retrieve(self, request, *args, **kwargs):
         result = {
             'status':200,
+            'msg': '请求成功'
         }
         try:
-            account = request.query_params.get('account')
+            account = request.user.account
             instance = models.UserInfo.objects.filter(account=account).first()
             serializer = self.get_serializer(instance)
             result['data'] = serializer.data

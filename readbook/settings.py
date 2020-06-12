@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'xadmin',
     'DjangoUeditor',
     'crispy_forms',
+    'rest_framework_swagger',
 ]
 
 MIDDLEWARE = [
@@ -129,5 +130,11 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
-
 STATIC_URL = '/static/'
+
+REST_FRAMEWORK = {
+    "DEFAULT_THROTTLE_CLASSES":["utils.throttle.MySimpleRateThrottle",],
+    "DEFAULT_THROTTLE_RATES":{
+        "readbook":"60/m"
+    }
+}

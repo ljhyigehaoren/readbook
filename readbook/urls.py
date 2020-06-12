@@ -18,6 +18,7 @@ from django.conf.urls import url,include
 from user import views as userview
 from rest_framework.routers import DefaultRouter
 import xadmin
+from rest_framework_swagger.views import get_swagger_view
 
 router = DefaultRouter()
 router.register(r'book',userview.BookViewSet,base_name='book')
@@ -28,12 +29,14 @@ router.register(r'adbanner',userview.AdvertiseBannderViewSet,base_name='adbanner
 router.register(r'chpater',userview.ChpaterViewSet,base_name='chpater')
 router.register(r'bookstore',userview.BookStoreViewSet,base_name='bookstore')
 
+schema_view = get_swagger_view(title="readbook")
 urlpatterns = [
     url(r'^xadmin/', xadmin.site.urls),
     url(r'^ueditor/', include('DjangoUeditor.urls')),
     url(r'^register/$',userview.RegisterView.as_view({'post':'create'})),
     url(r'^login/$',userview.LoginView.as_view()),
     url(r'',include(router.urls)),
-    url(r'userprofile/',userview.UserProfileViewSet.as_view({'get':'retrieve'})),
+    url(r'^userprofile/',userview.UserProfileViewSet.as_view({'get':'retrieve'})),
     url(r"^logintest/",userview.login_test),
+    url(r"^api/$",schema_view),
 ]
