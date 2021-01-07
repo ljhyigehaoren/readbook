@@ -18,7 +18,7 @@ httplib2==0.17.3
 idna==2.9
 importlib-metadata==1.6.0
 jdcal==1.4.1
-lxml==4.5.0
+lxml==4.6.2
 Markdown==3.2.2
 MarkupPy==1.14
 odfpy==1.4.1
